@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ],
+  "env": {
+    "FIREBASE_PROJECT_ID": "@firebase-project-id",
+    "FIREBASE_API_KEY": "@firebase-api-key",
+    "FIREBASE_AUTH_DOMAIN": "@firebase-auth-domain",
+    "FIREBASE_STORAGE_BUCKET": "@firebase-storage-bucket",
+    "FIREBASE_MESSAGING_SENDER_ID": "@firebase-messaging-sender-id",
+    "FIREBASE_APP_ID": "@firebase-app-id"
+  }
+}

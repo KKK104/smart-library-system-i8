@@ -5,47 +5,54 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, Lightbulb, MapPin, BookOpen } from "lucide-react"
+import { Search, Lightbulb, MapPin, BookOpen, Calculator, Atom, Globe, Heart, Shield, Wrench } from "lucide-react"
 
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedShelf, setSelectedShelf] = useState<string | null>(null)
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null)
   const [searchResults, setSearchResults] = useState<any[]>([])
 
+  // Subject mapping with LED pins and icons
+  const subjects = {
+    "Mathematics": { ledPin: 1, icon: Calculator, color: "bg-blue-500", books: 3 },
+    "Science": { ledPin: 2, icon: Atom, color: "bg-green-500", books: 3 },
+    "Social Studies": { ledPin: 3, icon: Globe, color: "bg-yellow-500", books: 3 },
+    "PEHM": { ledPin: 4, icon: Heart, color: "bg-red-500", books: 3 },
+    "Values Education": { ledPin: 5, icon: Shield, color: "bg-purple-500", books: 3 },
+    "TLE": { ledPin: 6, icon: Wrench, color: "bg-orange-500", books: 3 },
+  }
+
+  // Sample books database with subject mapping
   const books = [
-    {
-      id: 1,
-      title: "The Great Gatsby",
-      author: "F. Scott Fitzgerald",
-      isbn: "978-0-7432-7356-5",
-      shelf: "A1-2",
-      available: true,
-    },
-    {
-      id: 2,
-      title: "To Kill a Mockingbird",
-      author: "Harper Lee",
-      isbn: "978-0-06-112008-4",
-      shelf: "A2-1",
-      available: true,
-    },
-    { id: 3, title: "1984", author: "George Orwell", isbn: "978-0-452-28423-4", shelf: "B1-3", available: false },
-    {
-      id: 4,
-      title: "Pride and Prejudice",
-      author: "Jane Austen",
-      isbn: "978-0-14-143951-8",
-      shelf: "C2-2",
-      available: true,
-    },
-    {
-      id: 5,
-      title: "The Catcher in the Rye",
-      author: "J.D. Salinger",
-      isbn: "978-0-316-76948-0",
-      shelf: "A3-1",
-      available: true,
-    },
+    // Mathematics books
+    { id: 1, title: "Algebra Fundamentals", author: "John Smith", subject: "Mathematics", available: true },
+    { id: 2, title: "Calculus Made Easy", author: "Mary Johnson", subject: "Mathematics", available: true },
+    { id: 3, title: "Geometry Basics", author: "David Wilson", subject: "Mathematics", available: false },
+    
+    // Science books
+    { id: 4, title: "Physics Principles", author: "Sarah Brown", subject: "Science", available: true },
+    { id: 5, title: "Chemistry Basics", author: "Michael Davis", subject: "Science", available: true },
+    { id: 6, title: "Biology Essentials", author: "Lisa Garcia", subject: "Science", available: true },
+    
+    // Social Studies books
+    { id: 7, title: "World History", author: "Robert Martinez", subject: "Social Studies", available: true },
+    { id: 8, title: "Philippine History", author: "Ana Rodriguez", subject: "Social Studies", available: true },
+    { id: 9, title: "Geography Today", author: "Carlos Lopez", subject: "Social Studies", available: false },
+    
+    // PEHM books
+    { id: 10, title: "Physical Education Guide", author: "Maria Santos", subject: "PEHM", available: true },
+    { id: 11, title: "Health and Wellness", author: "Jose Cruz", subject: "PEHM", available: true },
+    { id: 12, title: "Music Appreciation", author: "Carmen Reyes", subject: "PEHM", available: true },
+    
+    // Values Education books
+    { id: 13, title: "Moral Values", author: "Pedro Torres", subject: "Values Education", available: true },
+    { id: 14, title: "Character Building", author: "Rosa Mendoza", subject: "Values Education", available: true },
+    { id: 15, title: "Ethics and Society", author: "Manuel Flores", subject: "Values Education", available: false },
+    
+    // TLE books
+    { id: 16, title: "Computer Programming", author: "Luz Gonzales", subject: "TLE", available: true },
+    { id: 17, title: "Cooking Basics", author: "Antonio Rivera", subject: "TLE", available: true },
+    { id: 18, title: "Electrical Wiring", author: "Elena Morales", subject: "TLE", available: true },
   ]
 
   const handleSearch = () => {
@@ -55,61 +62,66 @@ export default function SearchPage() {
       (book) =>
         book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         book.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        book.isbn.includes(searchQuery),
+        book.subject.toLowerCase().includes(searchQuery.toLowerCase()),
     )
     setSearchResults(results)
   }
 
-  const lightUpShelf = async (shelf: string) => {
-    setSelectedShelf(shelf)
+  const lightUpSubject = async (subject: string) => {
+    setSelectedSubject(subject)
 
     try {
-      // Send command to turn the light ON
-      await fetch("/api/shelf/control", {
+      // Send command to turn the LED ON for the subject
+      await fetch("/api/led/control", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shelfId: shelf, state: "on" }),
+        body: JSON.stringify({ 
+          subject: subject, 
+          ledPin: subjects[subject as keyof typeof subjects].ledPin, 
+          state: "on" 
+        }),
       })
 
       // Simulate the light staying on for 5 seconds, then turn it off
       setTimeout(async () => {
-        await fetch("/api/shelf/control", {
+        await fetch("/api/led/control", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ shelfId: shelf, state: "off" }),
+          body: JSON.stringify({ 
+            subject: subject, 
+            ledPin: subjects[subject as keyof typeof subjects].ledPin, 
+            state: "off" 
+          }),
         })
-        setSelectedShelf(null)
+        setSelectedSubject(null)
       }, 5000)
     } catch (error) {
-      console.error("Failed to control shelf light:", error)
-      setSelectedShelf(null) // Reset UI on error
+      console.error("Failed to control LED:", error)
+      setSelectedSubject(null) // Reset UI on error
     }
   }
 
-  const renderShelfGrid = () => {
-    const rows = ["A", "B", "C"]
-    const cols = [1, 2, 3]
-
+  const renderSubjectGrid = () => {
     return (
-      <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
-        {rows.map((row) =>
-          cols.map((col) => {
-            const shelfId = `${row}${col}`
-            const isLit = selectedShelf?.startsWith(shelfId)
-            return (
-              <div
-                key={shelfId}
-                className={`aspect-square border-2 rounded-lg flex flex-col items-center justify-center p-4 transition-all duration-300 ${
-                  isLit ? "bg-yellow-200 border-yellow-400 shadow-lg shadow-yellow-300" : "bg-gray-50 border-gray-200"
-                }`}
-              >
-                <div className="text-lg font-bold mb-2">{shelfId}</div>
-                <div className={`w-6 h-6 rounded-full ${isLit ? "bg-yellow-500" : "bg-gray-300"}`} />
-                {isLit && <Lightbulb className="h-4 w-4 text-yellow-600 mt-1" />}
-              </div>
-            )
-          }),
-        )}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {Object.entries(subjects).map(([subjectName, subjectInfo]) => {
+          const Icon = subjectInfo.icon
+          const isLit = selectedSubject === subjectName
+          return (
+            <div
+              key={subjectName}
+              className={`aspect-square border-2 rounded-lg flex flex-col items-center justify-center p-4 transition-all duration-300 ${
+                isLit ? "bg-yellow-100 border-yellow-400 shadow-lg shadow-yellow-300" : "bg-gray-50 border-gray-200"
+              }`}
+            >
+              <Icon className={`h-8 w-8 mb-2 ${isLit ? "text-yellow-600" : "text-gray-400"}`} />
+              <div className="text-sm font-bold mb-1 text-center">{subjectName}</div>
+              <div className={`w-4 h-4 rounded-full ${isLit ? "bg-yellow-500" : subjectInfo.color}`} />
+              <div className="text-xs text-gray-500 mt-1">LED {subjectInfo.ledPin}</div>
+              {isLit && <Lightbulb className="h-4 w-4 text-yellow-600 mt-1" />}
+            </div>
+          )
+        })}
       </div>
     )
   }
@@ -118,8 +130,8 @@ export default function SearchPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Smart Search & Lighting</h1>
-          <p className="text-lg text-gray-600">Find books and illuminate their exact shelf location</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Smart Search & LED Lighting</h1>
+          <p className="text-lg text-gray-600">Find books and illuminate their subject area with ESP32 LEDs</p>
         </div>
 
         {/* Search Interface */}
@@ -129,12 +141,12 @@ export default function SearchPage() {
               <Search className="h-5 w-5" />
               Book Search
             </CardTitle>
-            <CardDescription>Search by title, author, or ISBN to activate shelf lighting</CardDescription>
+            <CardDescription>Search by title, author, or subject to activate subject area LED</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex gap-4">
               <Input
-                placeholder="Enter book title, author, or ISBN..."
+                placeholder="Enter book title, author, or subject..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1"
@@ -168,16 +180,19 @@ export default function SearchPage() {
                         <div className="flex-1">
                           <h3 className="font-semibold text-lg">{book.title}</h3>
                           <p className="text-gray-600">by {book.author}</p>
-                          <p className="text-sm text-gray-500">ISBN: {book.isbn}</p>
                           <div className="flex items-center gap-2 mt-2">
                             <MapPin className="h-4 w-4 text-gray-500" />
-                            <span className="text-sm font-medium">Shelf: {book.shelf}</span>
+                            <span className="text-sm font-medium">Subject: {book.subject}</span>
                             <Badge variant={book.available ? "default" : "destructive"}>
                               {book.available ? "Available" : "Borrowed"}
                             </Badge>
                           </div>
                         </div>
-                        <Button onClick={() => lightUpShelf(book.shelf)} disabled={!book.available} className="ml-4">
+                        <Button 
+                          onClick={() => lightUpSubject(book.subject)} 
+                          disabled={!book.available} 
+                          className="ml-4"
+                        >
                           <Lightbulb className="h-4 w-4 mr-2" />
                           Light Up
                         </Button>
@@ -194,18 +209,18 @@ export default function SearchPage() {
             </CardContent>
           </Card>
 
-          {/* Shelf Visualization */}
+          {/* Subject LED Visualization */}
           <Card>
             <CardHeader>
-              <CardTitle>Library Shelf (3x3 Grid)</CardTitle>
+              <CardTitle>Subject Areas & LED Status</CardTitle>
               <CardDescription>
-                {selectedShelf
-                  ? `Shelf ${selectedShelf} is currently lit up`
+                {selectedSubject
+                  ? `${selectedSubject} LED is currently lit up`
                   : "LED lights will illuminate when you search for a book"}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {renderShelfGrid()}
+              {renderSubjectGrid()}
               <div className="mt-6 text-center">
                 <div className="flex items-center justify-center gap-4 text-sm text-gray-600">
                   <div className="flex items-center gap-2">
@@ -225,20 +240,20 @@ export default function SearchPage() {
         {/* System Information */}
         <Card className="mt-8">
           <CardHeader>
-            <CardTitle>System Components</CardTitle>
-            <CardDescription>Each shelf cell contains the following components</CardDescription>
+            <CardTitle>ESP32 LED System Components</CardTitle>
+            <CardDescription>Hardware components for the smart library lighting system</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
                 <div className="w-8 h-8 bg-blue-500 rounded mx-auto mb-2"></div>
-                <h4 className="font-medium">LED Light</h4>
-                <p className="text-sm text-gray-600">Illuminates shelf location</p>
+                <h4 className="font-medium">ESP32</h4>
+                <p className="text-sm text-gray-600">Wi-Fi microcontroller</p>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <div className="w-8 h-8 bg-green-500 rounded mx-auto mb-2"></div>
-                <h4 className="font-medium">ESP32</h4>
-                <p className="text-sm text-gray-600">Microcontroller unit</p>
+                <h4 className="font-medium">6 LEDs</h4>
+                <p className="text-sm text-gray-600">Subject area indicators</p>
               </div>
               <div className="text-center p-4 bg-orange-50 rounded-lg">
                 <div className="w-8 h-8 bg-orange-500 rounded mx-auto mb-2"></div>

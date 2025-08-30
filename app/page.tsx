@@ -5,24 +5,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, BookOpen, Users, Lightbulb, Mail, Nfc, BarChart3 } from 'lucide-react'
+import { Search, BookOpen, Users, Lightbulb, Mail, BarChart3 } from 'lucide-react'
 import Link from "next/link"
 
 export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("")
   
   const stats = [
-    { title: "Total Books", value: "12,847", icon: BookOpen, color: "text-blue-600" },
+    { title: "Total Books", value: "18", icon: BookOpen, color: "text-blue-600" },
     { title: "Active Users", value: "1,234", icon: Users, color: "text-green-600" },
     { title: "Books Borrowed", value: "456", icon: BarChart3, color: "text-orange-600" },
     { title: "Overdue Items", value: "23", icon: Mail, color: "text-red-600" },
   ]
 
   const recentActivity = [
-    { action: "Book borrowed", book: "The Great Gatsby", user: "John Doe", time: "2 minutes ago" },
-    { action: "Book returned", book: "To Kill a Mockingbird", user: "Jane Smith", time: "15 minutes ago" },
-    { action: "Shelf light activated", shelf: "A2-3", book: "1984", time: "1 hour ago" },
-    { action: "Email reminder sent", user: "Mike Johnson", book: "Pride and Prejudice", time: "2 hours ago" },
+    { action: "Book borrowed", book: "Algebra Fundamentals", user: "John Doe", time: "2 minutes ago" },
+    { action: "Book returned", book: "Physics Principles", user: "Jane Smith", time: "15 minutes ago" },
+    { action: "Shelf light activated", shelf: "Mathematics", book: "Calculus", time: "1 hour ago" },
+    { action: "Email reminder sent", user: "Mike Johnson", book: "Chemistry Basics", time: "2 hours ago" },
   ]
 
   return (
@@ -31,7 +31,7 @@ export default function HomePage() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Smart Library System</h1>
-          <p className="text-lg text-gray-600">Automated Lighting & NFC-Enabled Book Discovery</p>
+          <p className="text-lg text-gray-600">ESP32-Enabled LED Lighting for 6 Subject Areas</p>
         </div>
 
         {/* Quick Search */}
@@ -41,12 +41,12 @@ export default function HomePage() {
               <Search className="h-5 w-5" />
               Quick Book Search
             </CardTitle>
-            <CardDescription>Search for books and activate shelf lighting</CardDescription>
+            <CardDescription>Search for books and activate subject area lighting</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex gap-4">
               <Input
-                placeholder="Enter book title, author, or ISBN..."
+                placeholder="Enter book title, author, or subject..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1"
@@ -105,12 +105,6 @@ export default function HomePage() {
                   Email Notification System
                 </Button>
               </Link>
-              <Link href="/nfc">
-                <Button variant="outline" className="w-full justify-start">
-                  <Nfc className="h-4 w-4 mr-2" />
-                  NFC Mapping System
-                </Button>
-              </Link>
               <Link href="/shelf">
                 <Button variant="outline" className="w-full justify-start">
                   <BarChart3 className="h-4 w-4 mr-2" />
@@ -135,7 +129,7 @@ export default function HomePage() {
                       <p className="text-sm text-gray-600">
                         {activity.book && `"${activity.book}"`}
                         {activity.user && ` - ${activity.user}`}
-                        {activity.shelf && ` Shelf: ${activity.shelf}`}
+                        {activity.shelf && ` Subject: ${activity.shelf}`}
                       </p>
                     </div>
                     <Badge variant="secondary" className="text-xs">
@@ -155,20 +149,13 @@ export default function HomePage() {
             <CardDescription>Real-time monitoring of library components</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
                 <div>
-                  <p className="font-medium">Shelf Lighting</p>
-                  <p className="text-sm text-gray-600">All 9 LED units operational</p>
+                  <p className="font-medium">ESP32 LED System</p>
+                  <p className="text-sm text-gray-600">All 6 subject LEDs operational</p>
                 </div>
                 <Badge className="bg-green-100 text-green-800">Online</Badge>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
-                <div>
-                  <p className="font-medium">NFC System</p>
-                  <p className="text-sm text-gray-600">12 tags active</p>
-                </div>
-                <Badge className="bg-blue-100 text-blue-800">Active</Badge>
               </div>
               <div className="flex items-center justify-between p-4 bg-orange-50 rounded-lg">
                 <div>

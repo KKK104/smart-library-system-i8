@@ -6,114 +6,96 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Lightbulb, Zap, Wifi, AlertTriangle, CheckCircle, Activity } from 'lucide-react'
+import { Lightbulb, Zap, Wifi, AlertTriangle, CheckCircle, Activity, Calculator, Atom, Globe, Heart, Shield, Wrench } from 'lucide-react'
 
 export default function ShelfPage() {
-  const [shelfData, setShelfData] = useState([
+  const [subjectData, setSubjectData] = useState([
     {
-      id: "A1",
-      position: { row: 0, col: 0 },
-      ledStatus: "on",
+      id: "Mathematics",
+      ledPin: 1,
+      icon: Calculator,
+      ledStatus: "off",
       esp32Status: "online",
       powerLevel: 95,
       lastUpdate: "2024-01-16 16:45:00",
       temperature: 24.5,
-      books: 12
+      books: 3,
+      color: "bg-blue-500"
     },
     {
-      id: "A2",
-      position: { row: 0, col: 1 },
+      id: "Science",
+      ledPin: 2,
+      icon: Atom,
       ledStatus: "off",
       esp32Status: "online",
       powerLevel: 88,
       lastUpdate: "2024-01-16 16:44:30",
       temperature: 23.8,
-      books: 15
+      books: 3,
+      color: "bg-green-500"
     },
     {
-      id: "A3",
-      position: { row: 0, col: 2 },
+      id: "Social Studies",
+      ledPin: 3,
+      icon: Globe,
       ledStatus: "off",
       esp32Status: "online",
       powerLevel: 92,
       lastUpdate: "2024-01-16 16:45:15",
       temperature: 24.1,
-      books: 8
+      books: 3,
+      color: "bg-yellow-500"
     },
     {
-      id: "B1",
-      position: { row: 1, col: 0 },
+      id: "PEHM",
+      ledPin: 4,
+      icon: Heart,
       ledStatus: "off",
       esp32Status: "online",
       powerLevel: 76,
       lastUpdate: "2024-01-16 16:43:45",
       temperature: 25.2,
-      books: 18
+      books: 3,
+      color: "bg-red-500"
     },
     {
-      id: "B2",
-      position: { row: 1, col: 1 },
-      ledStatus: "blinking",
+      id: "Values Education",
+      ledPin: 5,
+      icon: Shield,
+      ledStatus: "off",
       esp32Status: "online",
       powerLevel: 91,
       lastUpdate: "2024-01-16 16:45:30",
       temperature: 24.7,
-      books: 11
+      books: 3,
+      color: "bg-purple-500"
     },
     {
-      id: "B3",
-      position: { row: 1, col: 2 },
-      ledStatus: "off",
-      esp32Status: "offline",
-      powerLevel: 0,
-      lastUpdate: "2024-01-16 15:30:00",
-      temperature: 0,
-      books: 14
-    },
-    {
-      id: "C1",
-      position: { row: 2, col: 0 },
+      id: "TLE",
+      ledPin: 6,
+      icon: Wrench,
       ledStatus: "off",
       esp32Status: "online",
       powerLevel: 84,
       lastUpdate: "2024-01-16 16:44:00",
       temperature: 23.5,
-      books: 16
-    },
-    {
-      id: "C2",
-      position: { row: 2, col: 1 },
-      ledStatus: "off",
-      esp32Status: "online",
-      powerLevel: 89,
-      lastUpdate: "2024-01-16 16:45:45",
-      temperature: 24.3,
-      books: 13
-    },
-    {
-      id: "C3",
-      position: { row: 2, col: 2 },
-      ledStatus: "off",
-      esp32Status: "online",
-      powerLevel: 93,
-      lastUpdate: "2024-01-16 16:45:20",
-      temperature: 24.0,
-      books: 9
+      books: 3,
+      color: "bg-orange-500"
     }
   ])
 
-  const [selectedShelf, setSelectedShelf] = useState<string | null>(null)
+  const [selectedSubject, setSelectedSubject] = useState<string | null>(null)
 
-  const getLEDStatusColor = (status: string) => {
+  const getLEDStatusColor = (status: string, defaultColor: string) => {
     switch (status) {
       case "on":
         return "bg-yellow-400 shadow-lg shadow-yellow-300"
       case "blinking":
         return "bg-orange-400 animate-pulse"
       case "off":
-        return "bg-gray-300"
+        return defaultColor
       default:
-        return "bg-gray-300"
+        return defaultColor
     }
   }
 
@@ -134,91 +116,131 @@ export default function ShelfPage() {
     return "text-red-600"
   }
 
-  const testShelfLED = (shelfId: string) => {
-    setShelfData(prev => prev.map(shelf => 
-      shelf.id === shelfId 
-        ? { ...shelf, ledStatus: "blinking" }
-        : shelf
+  const testSubjectLED = async (subjectId: string) => {
+    setSubjectData(prev => prev.map(subject => 
+      subject.id === subjectId 
+        ? { ...subject, ledStatus: "blinking" }
+        : subject
     ))
     
-    setTimeout(() => {
-      setShelfData(prev => prev.map(shelf => 
-        shelf.id === shelfId 
-          ? { ...shelf, ledStatus: "off" }
-          : shelf
+    try {
+      // Send command to turn the LED ON
+      await fetch("/api/led/control", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          subject: subjectId, 
+          ledPin: subjectData.find(s => s.id === subjectId)?.ledPin, 
+          state: "on" 
+        }),
+      })
+
+      // Turn off after 3 seconds
+      setTimeout(async () => {
+        await fetch("/api/led/control", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            subject: subjectId, 
+            ledPin: subjectData.find(s => s.id === subjectId)?.ledPin, 
+            state: "off" 
+          }),
+        })
+        
+        setSubjectData(prev => prev.map(subject => 
+          subject.id === subjectId 
+            ? { ...subject, ledStatus: "off" }
+            : subject
+        ))
+      }, 3000)
+    } catch (error) {
+      console.error("Failed to test LED:", error)
+      setSubjectData(prev => prev.map(subject => 
+        subject.id === subjectId 
+          ? { ...subject, ledStatus: "off" }
+          : subject
       ))
-    }, 3000)
+    }
   }
 
-  const renderShelfGrid = () => {
+  const renderSubjectGrid = () => {
     return (
-      <div className="grid grid-cols-3 gap-6 max-w-2xl mx-auto">
-        {shelfData.map((shelf) => (
-          <Card 
-            key={shelf.id}
-            className={`cursor-pointer transition-all duration-300 ${
-              selectedShelf === shelf.id ? 'ring-2 ring-blue-500' : ''
-            } ${shelf.esp32Status === 'offline' ? 'opacity-60' : ''}`}
-            onClick={() => setSelectedShelf(shelf.id)}
-          >
-            <CardContent className="p-6 text-center">
-              <div className="text-xl font-bold mb-4">{shelf.id}</div>
-              
-              {/* LED Indicator */}
-              <div className={`w-12 h-12 rounded-full mx-auto mb-4 ${getLEDStatusColor(shelf.ledStatus)}`}>
-                {shelf.ledStatus === 'on' && <Lightbulb className="h-6 w-6 text-yellow-800 mx-auto mt-3" />}
-              </div>
-              
-              {/* Status Badges */}
-              <div className="space-y-2 mb-4">
-                {getESP32StatusBadge(shelf.esp32Status)}
-                <div className="text-sm text-gray-600">
-                  {shelf.books} books
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        {subjectData.map((subject) => {
+          const Icon = subject.icon
+          return (
+            <Card 
+              key={subject.id}
+              className={`cursor-pointer transition-all duration-300 ${
+                selectedSubject === subject.id ? 'ring-2 ring-blue-500' : ''
+              } ${subject.esp32Status === 'offline' ? 'opacity-60' : ''}`}
+              onClick={() => setSelectedSubject(subject.id)}
+            >
+              <CardContent className="p-6 text-center">
+                <div className="flex items-center justify-center mb-4">
+                  <Icon className="h-8 w-8 mr-2 text-gray-600" />
+                  <div className="text-lg font-bold">{subject.id}</div>
                 </div>
-              </div>
-              
-              {/* Power Level */}
-              <div className="mb-2">
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Power</span>
-                  <span className={getPowerLevelColor(shelf.powerLevel)}>
-                    {shelf.powerLevel}%
-                  </span>
+                
+                {/* LED Indicator */}
+                <div className={`w-12 h-12 rounded-full mx-auto mb-4 ${getLEDStatusColor(subject.ledStatus, subject.color)}`}>
+                  {subject.ledStatus === 'on' && <Lightbulb className="h-6 w-6 text-yellow-800 mx-auto mt-3" />}
                 </div>
-                <Progress value={shelf.powerLevel} className="h-2" />
-              </div>
-              
-              {/* Test Button */}
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={(e) => {
-                  e.stopPropagation()
-                  testShelfLED(shelf.id)
-                }}
-                disabled={shelf.esp32Status === 'offline'}
-                className="w-full"
-              >
-                <Zap className="h-3 w-3 mr-1" />
-                Test LED
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+                
+                {/* Status Badges */}
+                <div className="space-y-2 mb-4">
+                  {getESP32StatusBadge(subject.esp32Status)}
+                  <div className="text-sm text-gray-600">
+                    LED Pin: {subject.ledPin}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {subject.books} books
+                  </div>
+                </div>
+                
+                {/* Power Level */}
+                <div className="mb-2">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Power</span>
+                    <span className={getPowerLevelColor(subject.powerLevel)}>
+                      {subject.powerLevel}%
+                    </span>
+                  </div>
+                  <Progress value={subject.powerLevel} className="h-2" />
+                </div>
+                
+                {/* Test Button */}
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    testSubjectLED(subject.id)
+                  }}
+                  disabled={subject.esp32Status === 'offline'}
+                  className="w-full"
+                >
+                  <Zap className="h-3 w-3 mr-1" />
+                  Test LED
+                </Button>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
     )
   }
 
-  const onlineShelfCount = shelfData.filter(shelf => shelf.esp32Status === 'online').length
-  const averagePowerLevel = Math.round(shelfData.reduce((sum, shelf) => sum + shelf.powerLevel, 0) / shelfData.length)
-  const totalBooks = shelfData.reduce((sum, shelf) => sum + shelf.books, 0)
+  const onlineSubjectCount = subjectData.filter(subject => subject.esp32Status === 'online').length
+  const averagePowerLevel = Math.round(subjectData.reduce((sum, subject) => sum + subject.powerLevel, 0) / subjectData.length)
+  const totalBooks = subjectData.reduce((sum, subject) => sum + subject.books, 0)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Shelf Monitoring System</h1>
-          <p className="text-lg text-gray-600">Real-time monitoring of LED lights, ESP32 controllers, and power systems</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">ESP32 LED Monitoring System</h1>
+          <p className="text-lg text-gray-600">Real-time monitoring of 6 subject area LEDs and ESP32 controllers</p>
         </div>
 
         {/* Stats Cards */}
@@ -227,8 +249,8 @@ export default function ShelfPage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Online Shelves</p>
-                  <p className="text-2xl font-bold text-gray-900">{onlineShelfCount}/9</p>
+                  <p className="text-sm font-medium text-gray-600">Online Subjects</p>
+                  <p className="text-2xl font-bold text-gray-900">{onlineSubjectCount}/6</p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
@@ -262,7 +284,7 @@ export default function ShelfPage() {
                 <div>
                   <p className="text-sm font-medium text-gray-600">Active LEDs</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {shelfData.filter(shelf => shelf.ledStatus !== 'off').length}
+                    {subjectData.filter(subject => subject.ledStatus !== 'off').length}
                   </p>
                 </div>
                 <Lightbulb className="h-8 w-8 text-orange-600" />
@@ -271,24 +293,24 @@ export default function ShelfPage() {
           </Card>
         </div>
 
-        {/* Shelf Grid */}
+        {/* Subject Grid */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>3x3 Library Shelf Grid</CardTitle>
+            <CardTitle>6 Subject Areas - LED Status</CardTitle>
             <CardDescription>
-              Click on any shelf to view detailed information. Each cell contains LED, ESP32, breadboard, and power supply.
+              Click on any subject to view detailed information. Each subject has its own LED controlled by the ESP32.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {renderShelfGrid()}
+            {renderSubjectGrid()}
           </CardContent>
         </Card>
 
         {/* Detailed Information */}
-        {selectedShelf && (
+        {selectedSubject && (
           <Card>
             <CardHeader>
-              <CardTitle>Shelf {selectedShelf} - Detailed Information</CardTitle>
+              <CardTitle>{selectedSubject} - Detailed Information</CardTitle>
               <CardDescription>Real-time monitoring data and component status</CardDescription>
             </CardHeader>
             <CardContent>
@@ -301,8 +323,8 @@ export default function ShelfPage() {
                 
                 <TabsContent value="overview" className="space-y-4">
                   {(() => {
-                    const shelf = shelfData.find(s => s.id === selectedShelf)
-                    if (!shelf) return null
+                    const subject = subjectData.find(s => s.id === selectedSubject)
+                    if (!subject) return null
                     
                     return (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -312,31 +334,35 @@ export default function ShelfPage() {
                             <div className="space-y-2">
                               <div className="flex justify-between">
                                 <span>ESP32 Controller:</span>
-                                {getESP32StatusBadge(shelf.esp32Status)}
+                                {getESP32StatusBadge(subject.esp32Status)}
                               </div>
                               <div className="flex justify-between">
                                 <span>LED Status:</span>
-                                <Badge variant={shelf.ledStatus === 'on' ? 'default' : 'outline'}>
-                                  {shelf.ledStatus}
+                                <Badge variant={subject.ledStatus === 'on' ? 'default' : 'outline'}>
+                                  {subject.ledStatus}
                                 </Badge>
                               </div>
                               <div className="flex justify-between">
+                                <span>LED Pin:</span>
+                                <span className="text-sm text-gray-600">GPIO {subject.ledPin}</span>
+                              </div>
+                              <div className="flex justify-between">
                                 <span>Last Update:</span>
-                                <span className="text-sm text-gray-600">{shelf.lastUpdate}</span>
+                                <span className="text-sm text-gray-600">{subject.lastUpdate}</span>
                               </div>
                             </div>
                           </div>
                           
                           <div className="p-4 bg-gray-50 rounded-lg">
-                            <h4 className="font-medium mb-2">Environmental Data</h4>
+                            <h4 className="font-medium mb-2">Subject Information</h4>
                             <div className="space-y-2">
                               <div className="flex justify-between">
-                                <span>Temperature:</span>
-                                <span>{shelf.temperature}°C</span>
+                                <span>Books Available:</span>
+                                <span>{subject.books}</span>
                               </div>
                               <div className="flex justify-between">
-                                <span>Books on Shelf:</span>
-                                <span>{shelf.books}</span>
+                                <span>Temperature:</span>
+                                <span>{subject.temperature}°C</span>
                               </div>
                             </div>
                           </div>
@@ -349,14 +375,14 @@ export default function ShelfPage() {
                               <div>
                                 <div className="flex justify-between text-sm mb-1">
                                   <span>Battery Level</span>
-                                  <span className={getPowerLevelColor(shelf.powerLevel)}>
-                                    {shelf.powerLevel}%
+                                  <span className={getPowerLevelColor(subject.powerLevel)}>
+                                    {subject.powerLevel}%
                                   </span>
                                 </div>
-                                <Progress value={shelf.powerLevel} className="h-3" />
+                                <Progress value={subject.powerLevel} className="h-3" />
                               </div>
                               <div className="text-sm text-gray-600">
-                                Estimated runtime: {Math.round(shelf.powerLevel / 10)} hours
+                                Estimated runtime: {Math.round(subject.powerLevel / 10)} hours
                               </div>
                             </div>
                           </div>
@@ -365,8 +391,8 @@ export default function ShelfPage() {
                             <h4 className="font-medium mb-2">Quick Actions</h4>
                             <div className="space-y-2">
                               <Button 
-                                onClick={() => testShelfLED(shelf.id)}
-                                disabled={shelf.esp32Status === 'offline'}
+                                onClick={() => testSubjectLED(subject.id)}
+                                disabled={subject.esp32Status === 'offline'}
                                 className="w-full"
                               >
                                 <Lightbulb className="h-4 w-4 mr-2" />
@@ -397,12 +423,16 @@ export default function ShelfPage() {
                           <span>High-brightness LED</span>
                         </div>
                         <div className="flex justify-between">
+                          <span>GPIO Pin:</span>
+                          <span>{subjectData.find(s => s.id === selectedSubject)?.ledPin}</span>
+                        </div>
+                        <div className="flex justify-between">
                           <span>Power:</span>
                           <span>5W</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Status:</span>
-                          <Badge variant="outline">{shelfData.find(s => s.id === selectedShelf)?.ledStatus}</Badge>
+                          <Badge variant="outline">{subjectData.find(s => s.id === selectedSubject)?.ledStatus}</Badge>
                         </div>
                       </div>
                     </div>
@@ -424,6 +454,10 @@ export default function ShelfPage() {
                         <div className="flex justify-between">
                           <span>Firmware:</span>
                           <span>v2.1.0</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Status:</span>
+                          {getESP32StatusBadge(subjectData.find(s => s.id === selectedSubject)?.esp32Status || 'offline')}
                         </div>
                       </div>
                     </div>
@@ -465,7 +499,7 @@ export default function ShelfPage() {
                         </div>
                         <div className="flex justify-between">
                           <span>Battery:</span>
-                          <span>{shelfData.find(s => s.id === selectedShelf)?.powerLevel}%</span>
+                          <span>{subjectData.find(s => s.id === selectedSubject)?.powerLevel}%</span>
                         </div>
                       </div>
                     </div>
