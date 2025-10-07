@@ -84,7 +84,6 @@ export async function POST(request: NextRequest) {
               .single()
             created = resNoHash.data
           }
-            .from('library_members')
           if (created?.id) {
             numericUserId = created.id
           }
