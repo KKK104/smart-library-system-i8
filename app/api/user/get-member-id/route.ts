@@ -24,34 +24,57 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error || !member) {
-      // Auto-create minimal member row if not found to satisfy foreign key
+      // Not found → attempt to create, accommodating schema differences
       const safeName = (name && String(name).trim().length > 0) ? name : (email?.split('@')[0] || 'New Member')
       const joinDate = new Date().toISOString().split('T')[0]
-      const { data: created, error: createError } = await supabase
-        .from('library_members')
-        .insert({
-          name: safeName,
-          email,
-          join_date: joinDate,
-          borrowed_count: 0,
-          overdue_count: 0,
-          status: 'Active'
-        })
-        .select('id')
-        .single()
 
-      if (createError || !created) {
-        // Fallback to default ID if creation fails
+      // Try with password_hash (for schemas that require it)
+      const placeholderHash = '$2y$10$abcdefghijklmnopqrstuv0123456789abcdefghijklmnopqrstuv12'
+      let createdId: number | null = null
+
+      try {
+        const { data: createdWithHash } = await supabase
+          .from('library_members')
+          .insert({
+            name: safeName,
+            email,
+            password_hash: placeholderHash,
+            join_date: joinDate,
+            borrowed_count: 0,
+            overdue_count: 0,
+            status: 'Active'
+          })
+          .select('id')
+          .single()
+        createdId = createdWithHash?.id ?? null
+      } catch (e) {
+        // Retry without password_hash if column does not exist
+        const { data: createdNoHash } = await supabase
+          .from('library_members')
+          .insert({
+            name: safeName,
+            email,
+            join_date: joinDate,
+            borrowed_count: 0,
+            overdue_count: 0,
+            status: 'Active'
+          })
+          .select('id')
+          .single()
+        createdId = createdNoHash?.id ?? null
+      }
+
+      if (!createdId) {
         return NextResponse.json({
-          success: true,
-          memberId: 1,
-          message: 'Member not found; using default ID'
-        })
+          success: false,
+          memberId: null,
+          message: 'Failed to create library member'
+        }, { status: 500 })
       }
 
       return NextResponse.json({
         success: true,
-        memberId: created.id,
+        memberId: createdId,
         message: 'Member created'
       })
     }

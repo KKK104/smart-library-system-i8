@@ -35,12 +35,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Resolve a valid numeric member_id to satisfy FK
+    // Resolve a valid numeric member_id to satisfy FK (get-or-create by email)
     let numericUserId = userId
     if (!numericUserId || typeof numericUserId !== 'number') {
       // Try to get or create member by email
       if (email) {
-        const { data: found, error: findErr } = await supabase
+        const { data: found } = await supabase
           .from('library_members')
           .select('id')
           .eq('email', email)
@@ -51,19 +51,40 @@ export async function POST(request: NextRequest) {
         } else {
           const joinDate = new Date().toISOString().split('T')[0]
           const safeName = (name && String(name).trim().length > 0) ? name : (email.split('@')[0] || 'New Member')
-          const { data: created, error: createErr } = await supabase
+          // Try with password_hash first, then without
+          const placeholderHash = '$2y$10$abcdefghijklmnopqrstuv0123456789abcdefghijklmnopqrstuv12'
+          let created: any = null
+          try {
+            const resWithHash = await supabase
+              .from('library_members')
+              .insert({
+                name: safeName,
+                email,
+                password_hash: placeholderHash,
+                join_date: joinDate,
+                borrowed_count: 0,
+                overdue_count: 0,
+                status: 'Active'
+              })
+              .select('id')
+              .single()
+            created = resWithHash.data
+          } catch (e) {
+            const resNoHash = await supabase
+              .from('library_members')
+              .insert({
+                name: safeName,
+                email,
+                join_date: joinDate,
+                borrowed_count: 0,
+                overdue_count: 0,
+                status: 'Active'
+              })
+              .select('id')
+              .single()
+            created = resNoHash.data
+          }
             .from('library_members')
-            .insert({
-              name: safeName,
-              email,
-              join_date: joinDate,
-              borrowed_count: 0,
-              overdue_count: 0,
-              status: 'Active'
-            })
-            .select('id')
-            .single()
-
           if (created?.id) {
             numericUserId = created.id
           }
