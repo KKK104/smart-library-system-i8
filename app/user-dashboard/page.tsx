@@ -120,7 +120,7 @@ export default function UserDashboard() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ email: userData.email })
+          body: JSON.stringify({ email: userData.email, name: userData.name || userData.full_name })
         })
         
         if (memberResponse.ok) {

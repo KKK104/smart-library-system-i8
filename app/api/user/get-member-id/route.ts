@@ -7,7 +7,7 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json()
+    const { email, name } = await request.json()
 
     if (!email) {
       return NextResponse.json(
@@ -24,11 +24,35 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error || !member) {
-      // If member not found, return default ID
+      // Auto-create minimal member row if not found to satisfy foreign key
+      const safeName = (name && String(name).trim().length > 0) ? name : (email?.split('@')[0] || 'New Member')
+      const joinDate = new Date().toISOString().split('T')[0]
+      const { data: created, error: createError } = await supabase
+        .from('library_members')
+        .insert({
+          name: safeName,
+          email,
+          join_date: joinDate,
+          borrowed_count: 0,
+          overdue_count: 0,
+          status: 'Active'
+        })
+        .select('id')
+        .single()
+
+      if (createError || !created) {
+        // Fallback to default ID if creation fails
+        return NextResponse.json({
+          success: true,
+          memberId: 1,
+          message: 'Member not found; using default ID'
+        })
+      }
+
       return NextResponse.json({
         success: true,
-        memberId: 1, // Default member ID
-        message: 'Member not found, using default ID'
+        memberId: created.id,
+        message: 'Member created'
       })
     }
 
