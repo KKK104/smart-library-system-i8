@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { bookId, borrowingDays, userId } = await request.json()
+    const { bookId, borrowingDays, userId, email, name } = await request.json()
 
     if (!bookId || !borrowingDays || !userId) {
       return NextResponse.json(
@@ -35,22 +35,47 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Convert UUID userId to numeric ID if needed
+    // Resolve a valid numeric member_id to satisfy FK
     let numericUserId = userId
-    if (typeof userId === 'string' && userId.includes('-')) {
-      // This is a UUID, we need to find the corresponding numeric ID in library_members
-      const { data: member, error: memberError } = await supabase
-        .from('library_members')
-        .select('id')
-        .eq('email', userId) // Assuming the UUID is passed as email
-        .single()
-      
-      if (memberError || !member) {
-        // If not found by email, use a default ID or create a new member
-        console.log('User not found in library_members, using default ID')
-        numericUserId = 1 // Default user ID
-      } else {
-        numericUserId = member.id
+    if (!numericUserId || typeof numericUserId !== 'number') {
+      // Try to get or create member by email
+      if (email) {
+        const { data: found, error: findErr } = await supabase
+          .from('library_members')
+          .select('id')
+          .eq('email', email)
+          .single()
+
+        if (found?.id) {
+          numericUserId = found.id
+        } else {
+          const joinDate = new Date().toISOString().split('T')[0]
+          const safeName = (name && String(name).trim().length > 0) ? name : (email.split('@')[0] || 'New Member')
+          const { data: created, error: createErr } = await supabase
+            .from('library_members')
+            .insert({
+              name: safeName,
+              email,
+              join_date: joinDate,
+              borrowed_count: 0,
+              overdue_count: 0,
+              status: 'Active'
+            })
+            .select('id')
+            .single()
+
+          if (created?.id) {
+            numericUserId = created.id
+          }
+        }
+      }
+
+      // Final fallback
+      if (!numericUserId || typeof numericUserId !== 'number') {
+        return NextResponse.json(
+          { error: 'Unable to resolve a valid member ID for this user' },
+          { status: 400 }
+        )
       }
     }
 
