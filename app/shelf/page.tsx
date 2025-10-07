@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Lightbulb, Zap, Wifi, AlertTriangle, CheckCircle, Activity, Calculator, Atom, Globe, Heart, Shield, Wrench } from 'lucide-react'
+import { AdminSidebar } from "@/components/admin-sidebar"
 
 export default function ShelfPage() {
   const [subjectData, setSubjectData] = useState([
@@ -237,7 +238,13 @@ export default function ShelfPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-8">
+      <div className="flex">
+        {/* Sidebar */}
+        <AdminSidebar />
+        
+        {/* Main Content */}
+        <div className="flex-1">
+          <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">ESP32 LED Monitoring System</h1>
           <p className="text-lg text-gray-600">Real-time monitoring of 6 subject area LEDs and ESP32 controllers</p>
@@ -567,6 +574,8 @@ export default function ShelfPage() {
             </CardContent>
           </Card>
         )}
+          </div>
+        </div>
       </div>
     </div>
   )

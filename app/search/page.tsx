@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Search, Lightbulb, MapPin, BookOpen, Calculator, Atom, Globe, Heart, Shield, Wrench } from "lucide-react"
+import { AdminSidebar } from "@/components/admin-sidebar"
 
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -128,7 +129,13 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-8">
+      <div className="flex">
+        {/* Sidebar */}
+        <AdminSidebar />
+        
+        {/* Main Content */}
+        <div className="flex-1">
+          <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Smart Search & LED Lighting</h1>
           <p className="text-lg text-gray-600">Find books and illuminate their subject area with ESP32 LEDs</p>
@@ -268,6 +275,8 @@ export default function SearchPage() {
             </div>
           </CardContent>
         </Card>
+          </div>
+        </div>
       </div>
     </div>
   )

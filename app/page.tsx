@@ -1,172 +1,431 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Search, BookOpen, Users, Lightbulb, Mail, BarChart3 } from 'lucide-react'
-import Link from "next/link"
+import { Label } from "@/components/ui/label"
+import { BookOpen, User, Lock, Mail, Shield, AlertCircle, Eye, EyeOff } from 'lucide-react'
 
-export default function HomePage() {
-  const [searchQuery, setSearchQuery] = useState("")
-  
-  const stats = [
-    { title: "Total Books", value: "18", icon: BookOpen, color: "text-blue-600" },
-    { title: "Active Users", value: "1,234", icon: Users, color: "text-green-600" },
-    { title: "Books Borrowed", value: "456", icon: BarChart3, color: "text-orange-600" },
-    { title: "Overdue Items", value: "23", icon: Mail, color: "text-red-600" },
-  ]
+export default function WelcomePage() {
+  const router = useRouter()
+  const [showUserLogin, setShowUserLogin] = useState(false)
+  const [showSignup, setShowSignup] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showSignupPassword, setShowSignupPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
 
-  const recentActivity = [
-    { action: "Book borrowed", book: "Algebra Fundamentals", user: "John Doe", time: "2 minutes ago" },
-    { action: "Book returned", book: "Physics Principles", user: "Jane Smith", time: "15 minutes ago" },
-    { action: "Shelf light activated", shelf: "Mathematics", book: "Calculus", time: "1 hour ago" },
-    { action: "Email reminder sent", user: "Mike Johnson", book: "Chemistry Basics", time: "2 hours ago" },
-  ]
+  // User login state
+  const [userLogin, setUserLogin] = useState({
+    email: "",
+    password: ""
+  })
+
+  // User signup state
+  const [userSignup, setUserSignup] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: ""
+  })
+
+  const handleUserLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    setIsLoading(true)
+
+    try {
+      const response = await fetch('/api/user/login-simple', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userLogin),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Store user session
+        localStorage.setItem('userToken', data.token)
+        localStorage.setItem('userData', JSON.stringify(data.user))
+        
+        // Redirect to user dashboard
+        router.push('/user-dashboard')
+      } else {
+        setError(data.error || 'Invalid credentials')
+      }
+    } catch (err) {
+      setError('Login failed. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleUserSignup = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+
+    if (userSignup.password !== userSignup.confirmPassword) {
+      setError("Passwords do not match")
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      const response = await fetch('/api/user/signup-simple', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: userSignup.name,
+          email: userSignup.email,
+          password: userSignup.password
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setError("")
+        alert("Account created successfully! Please check your email for verification.")
+        setShowSignup(false)
+        setShowUserLogin(true)
+      } else {
+        setError(data.error || 'Signup failed')
+      }
+    } catch (err) {
+      setError('Signup failed. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleAdminLogin = () => {
+    router.push('/login')
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Smart Library System</h1>
-          <p className="text-lg text-gray-600">ESP32-Enabled LED Lighting for 6 Subject Areas</p>
+        <div className="text-center mb-12">
+          <div className="flex justify-center mb-6">
+            <div className="bg-blue-600 p-6 rounded-full shadow-lg">
+              <BookOpen className="h-16 w-16 text-white" />
+            </div>
+          </div>
+          <h1 className="text-5xl font-bold text-gray-900 mb-4">
+            Smart Library System
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            ESP32-Enabled LED Lighting System with Intelligent Book Management
+          </p>
+          <div className="mt-6">
+            <Button
+              onClick={handleAdminLogin}
+              variant="outline"
+              className="bg-white hover:bg-gray-50 border-2 border-blue-600 text-blue-600 hover:text-blue-700 px-6 py-3"
+            >
+              <Shield className="h-5 w-5 mr-2" />
+              Admin Login
+            </Button>
+          </div>
         </div>
 
-        {/* Quick Search */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Search className="h-5 w-5" />
-              Quick Book Search
-            </CardTitle>
-            <CardDescription>Search for books and activate subject area lighting</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-4">
-              <Input
-                placeholder="Enter book title, author, or subject..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1"
-              />
-              <Link href="/search">
-                <Button>
-                  <Search className="h-4 w-4 mr-2" />
-                  Search & Light Up
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => (
-            <Card key={index}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">{stat.title}</p>
-                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          {/* Left Side - Welcome Content */}
+          <div className="space-y-8">
+            <Card className="shadow-xl border-0">
+              <CardHeader>
+                <CardTitle className="text-2xl text-center">Welcome to Our Smart Library</CardTitle>
+                <CardDescription className="text-center text-lg">
+                  Experience the future of library management with intelligent LED lighting and seamless book discovery.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg">
+                    <div className="bg-blue-600 p-2 rounded-full">
+                      <BookOpen className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-blue-900">Smart Search</h3>
+                      <p className="text-sm text-blue-700">Find books instantly with LED guidance</p>
+                    </div>
                   </div>
-                  <stat.icon className={`h-8 w-8 ${stat.color}`} />
+                  <div className="flex items-center space-x-3 p-4 bg-green-50 rounded-lg">
+                    <div className="bg-green-600 p-2 rounded-full">
+                      <Mail className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-green-900">Email Notifications</h3>
+                      <p className="text-sm text-green-700">Stay updated on deadlines and requests</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-gradient-to-r from-blue-100 to-indigo-100 p-6 rounded-lg">
+                  <h3 className="font-bold text-lg mb-3 text-gray-800">System Features:</h3>
+                  <ul className="space-y-2 text-gray-700">
+                    <li className="flex items-center">
+                      <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
+                      ESP32-powered LED shelf lighting
+                    </li>
+                    <li className="flex items-center">
+                      <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
+                      Real-time book availability tracking
+                    </li>
+                    <li className="flex items-center">
+                      <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
+                      Automated deadline reminders
+                    </li>
+                    <li className="flex items-center">
+                      <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
+                      Book request and notification system
+                    </li>
+                  </ul>
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
+          </div>
 
-        {/* Main Features */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* System Features */}
-          <Card>
-            <CardHeader>
-              <CardTitle>System Features</CardTitle>
-              <CardDescription>Access all library management tools</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Link href="/search">
-                <Button variant="outline" className="w-full justify-start">
-                  <Lightbulb className="h-4 w-4 mr-2" />
-                  Smart Shelf Lighting Control
-                </Button>
-              </Link>
-              <Link href="/users">
-                <Button variant="outline" className="w-full justify-start">
-                  <Users className="h-4 w-4 mr-2" />
-                  User Management
-                </Button>
-              </Link>
-              <Link href="/notifications">
-                <Button variant="outline" className="w-full justify-start">
-                  <Mail className="h-4 w-4 mr-2" />
-                  Email Notification System
-                </Button>
-              </Link>
-              <Link href="/shelf">
-                <Button variant="outline" className="w-full justify-start">
-                  <BarChart3 className="h-4 w-4 mr-2" />
-                  Shelf Monitoring
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Recent Activity */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Latest system events and user actions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-sm">{activity.action}</p>
-                      <p className="text-sm text-gray-600">
-                        {activity.book && `"${activity.book}"`}
-                        {activity.user && ` - ${activity.user}`}
-                        {activity.shelf && ` Subject: ${activity.shelf}`}
-                      </p>
-                    </div>
-                    <Badge variant="secondary" className="text-xs">
-                      {activity.time}
-                    </Badge>
+          {/* Right Side - User Login/Signup */}
+          <div className="flex justify-center">
+            <Card className="w-full max-w-md shadow-2xl border-0">
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl">
+                  {showSignup ? "Create Account" : "User Login"}
+                </CardTitle>
+                <CardDescription>
+                  {showSignup 
+                    ? "Join our smart library community" 
+                    : "Access your library account"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {!showUserLogin && !showSignup ? (
+                  <div className="space-y-4">
+                    <Button
+                      onClick={() => setShowUserLogin(true)}
+                      className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-lg"
+                    >
+                      <User className="h-5 w-5 mr-2" />
+                      User Login
+                    </Button>
+                    <Button
+                      onClick={() => setShowSignup(true)}
+                      variant="outline"
+                      className="w-full h-12 text-lg"
+                    >
+                      <Mail className="h-5 w-5 mr-2" />
+                      Create New Account
+                    </Button>
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                ) : showSignup ? (
+                  <form onSubmit={handleUserSignup} className="space-y-4">
+                    {error && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
+                        <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+                        <p className="text-sm text-red-600">{error}</p>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-name" className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        Full Name
+                      </Label>
+                      <Input
+                        id="signup-name"
+                        type="text"
+                        placeholder="Enter your full name"
+                        value={userSignup.name}
+                        onChange={(e) => setUserSignup({...userSignup, name: e.target.value})}
+                        required
+                        className="h-11"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-email" className="flex items-center gap-2">
+                        <Mail className="h-4 w-4" />
+                        Email Address
+                      </Label>
+                      <Input
+                        id="signup-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={userSignup.email}
+                        onChange={(e) => setUserSignup({...userSignup, email: e.target.value})}
+                        required
+                        className="h-11"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-password" className="flex items-center gap-2">
+                        <Lock className="h-4 w-4" />
+                        Password
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="signup-password"
+                          type={showSignupPassword ? "text" : "password"}
+                          placeholder="Create a password"
+                          value={userSignup.password}
+                          onChange={(e) => setUserSignup({...userSignup, password: e.target.value})}
+                          required
+                          className="h-11 pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowSignupPassword(!showSignupPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        >
+                          {showSignupPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-confirm-password" className="flex items-center gap-2">
+                        <Lock className="h-4 w-4" />
+                        Confirm Password
+                      </Label>
+                      <Input
+                        id="signup-confirm-password"
+                        type="password"
+                        placeholder="Confirm your password"
+                        value={userSignup.confirmPassword}
+                        onChange={(e) => setUserSignup({...userSignup, confirmPassword: e.target.value})}
+                        required
+                        className="h-11"
+                      />
+                    </div>
+
+                    <Button
+                      type="submit"
+                      className="w-full h-11 bg-blue-600 hover:bg-blue-700"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Creating Account...
+                        </div>
+                      ) : (
+                        'Create Account'
+                      )}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      onClick={() => setShowSignup(false)}
+                      variant="ghost"
+                      className="w-full"
+                    >
+                      Back to Login
+                    </Button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleUserLogin} className="space-y-4">
+                    {error && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
+                        <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+                        <p className="text-sm text-red-600">{error}</p>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label htmlFor="user-email" className="flex items-center gap-2">
+                        <Mail className="h-4 w-4" />
+                        Email Address
+                      </Label>
+                      <Input
+                        id="user-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={userLogin.email}
+                        onChange={(e) => setUserLogin({...userLogin, email: e.target.value})}
+                        required
+                        className="h-11"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="user-password" className="flex items-center gap-2">
+                        <Lock className="h-4 w-4" />
+                        Password
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="user-password"
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Enter your password"
+                          value={userLogin.password}
+                          onChange={(e) => setUserLogin({...userLogin, password: e.target.value})}
+                          required
+                          className="h-11 pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <Button
+                      type="submit"
+                      className="w-full h-11 bg-blue-600 hover:bg-blue-700"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Logging in...
+                        </div>
+                      ) : (
+                        'Login'
+                      )}
+                    </Button>
+
+                    <div className="text-center">
+                      <button
+                        type="button"
+                        onClick={() => setShowSignup(true)}
+                        className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                      >
+                        Don't have an account? Create one
+                      </button>
+                    </div>
+
+                    <Button
+                      type="button"
+                      onClick={() => setShowUserLogin(false)}
+                      variant="ghost"
+                      className="w-full"
+                    >
+                      Back
+                    </Button>
+                  </form>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        {/* System Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle>System Status</CardTitle>
-            <CardDescription>Real-time monitoring of library components</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
-                <div>
-                  <p className="font-medium">ESP32 LED System</p>
-                  <p className="text-sm text-gray-600">All 6 subject LEDs operational</p>
-                </div>
-                <Badge className="bg-green-100 text-green-800">Online</Badge>
-              </div>
-              <div className="flex items-center justify-between p-4 bg-orange-50 rounded-lg">
-                <div>
-                  <p className="font-medium">Email Service</p>
-                  <p className="text-sm text-gray-600">23 pending notifications</p>
-                </div>
-                <Badge className="bg-orange-100 text-orange-800">Processing</Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Footer */}
+        <div className="mt-16 text-center text-sm text-gray-600">
+          <p>© 2024 Smart Library System. All rights reserved.</p>
+        </div>
       </div>
     </div>
   )
