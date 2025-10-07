@@ -6,21 +6,21 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Search, Lightbulb, MapPin, BookOpen, Calculator, Atom, Globe, Heart, Shield, Wrench } from "lucide-react"
-import { AdminSidebar } from "@/components/admin-sidebar"
+// Removed admin sidebar for user-facing Search & Light page
 
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null)
   const [searchResults, setSearchResults] = useState<any[]>([])
 
-  // Subject mapping with LED pins and icons
+  // Subject mapping with icons only (hide LED pin/power/online details)
   const subjects = {
-    "Mathematics": { ledPin: 1, icon: Calculator, color: "bg-blue-500", books: 3 },
-    "Science": { ledPin: 2, icon: Atom, color: "bg-green-500", books: 3 },
-    "Social Studies": { ledPin: 3, icon: Globe, color: "bg-yellow-500", books: 3 },
-    "PEHM": { ledPin: 4, icon: Heart, color: "bg-red-500", books: 3 },
-    "Values Education": { ledPin: 5, icon: Shield, color: "bg-purple-500", books: 3 },
-    "TLE": { ledPin: 6, icon: Wrench, color: "bg-orange-500", books: 3 },
+    "Mathematics": { icon: Calculator, color: "bg-blue-500", books: 3 },
+    "Science": { icon: Atom, color: "bg-green-500", books: 3 },
+    "Social Studies": { icon: Globe, color: "bg-yellow-500", books: 3 },
+    "PEHM": { icon: Heart, color: "bg-red-500", books: 3 },
+    "Values Education": { icon: Shield, color: "bg-purple-500", books: 3 },
+    "TLE": { icon: Wrench, color: "bg-orange-500", books: 3 },
   }
 
   // Sample books database with subject mapping
@@ -78,7 +78,6 @@ export default function SearchPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           subject: subject, 
-          ledPin: subjects[subject as keyof typeof subjects].ledPin, 
           state: "on" 
         }),
       })
@@ -90,7 +89,6 @@ export default function SearchPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
             subject: subject, 
-            ledPin: subjects[subject as keyof typeof subjects].ledPin, 
             state: "off" 
           }),
         })
@@ -118,7 +116,6 @@ export default function SearchPage() {
               <Icon className={`h-8 w-8 mb-2 ${isLit ? "text-yellow-600" : "text-gray-400"}`} />
               <div className="text-sm font-bold mb-1 text-center">{subjectName}</div>
               <div className={`w-4 h-4 rounded-full ${isLit ? "bg-yellow-500" : subjectInfo.color}`} />
-              <div className="text-xs text-gray-500 mt-1">LED {subjectInfo.ledPin}</div>
               {isLit && <Lightbulb className="h-4 w-4 text-yellow-600 mt-1" />}
             </div>
           )
@@ -129,13 +126,7 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="flex">
-        {/* Sidebar */}
-        <AdminSidebar />
-        
-        {/* Main Content */}
-        <div className="flex-1">
-          <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Smart Search & LED Lighting</h1>
           <p className="text-lg text-gray-600">Find books and illuminate their subject area with ESP32 LEDs</p>
@@ -275,8 +266,6 @@ export default function SearchPage() {
             </div>
           </CardContent>
         </Card>
-          </div>
-        </div>
       </div>
     </div>
   )

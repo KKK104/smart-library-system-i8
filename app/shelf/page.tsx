@@ -13,7 +13,6 @@ export default function ShelfPage() {
   const [subjectData, setSubjectData] = useState([
     {
       id: "Mathematics",
-      ledPin: 1,
       icon: Calculator,
       ledStatus: "off",
       esp32Status: "online",
@@ -190,25 +189,13 @@ export default function ShelfPage() {
                 
                 {/* Status Badges */}
                 <div className="space-y-2 mb-4">
-                  {getESP32StatusBadge(subject.esp32Status)}
-                  <div className="text-sm text-gray-600">
-                    LED Pin: {subject.ledPin}
-                  </div>
+                  {/* Online badge, LED pin removed per request */}
                   <div className="text-sm text-gray-600">
                     {subject.books} books
                   </div>
                 </div>
                 
-                {/* Power Level */}
-                <div className="mb-2">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Power</span>
-                    <span className={getPowerLevelColor(subject.powerLevel)}>
-                      {subject.powerLevel}%
-                    </span>
-                  </div>
-                  <Progress value={subject.powerLevel} className="h-2" />
-                </div>
+                {/* Power level removed per request */}
                 
                 {/* Test Button */}
                 <Button 

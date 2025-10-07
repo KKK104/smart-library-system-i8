@@ -302,53 +302,6 @@ export default function UsersPage() {
                   <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                   Refresh
                 </Button>
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button disabled={isCreating}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add User
-                    </Button>
-                  </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Add New User</DialogTitle>
-                    <DialogDescription>Create a new library member account</DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="name">Full Name</Label>
-                      <Input
-                        id="name"
-                        value={newUser.name}
-                        onChange={(e) => setNewUser({...newUser, name: e.target.value})}
-                        placeholder="Enter full name"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={newUser.email}
-                        onChange={(e) => setNewUser({...newUser, email: e.target.value})}
-                        placeholder="Enter email address"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="membershipId">Membership ID</Label>
-                      <Input
-                        id="membershipId"
-                        value={newUser.membershipId}
-                        onChange={(e) => setNewUser({...newUser, membershipId: e.target.value})}
-                        placeholder="Enter membership ID"
-                      />
-                    </div>
-                    <Button onClick={handleAddUser} className="w-full" disabled={isCreating}>
-                      {isCreating ? 'Creating...' : 'Add User'}
-                    </Button>
-                  </div>
-                </DialogContent>
-                </Dialog>
               </div>
             </div>
           </CardHeader>
@@ -413,25 +366,7 @@ export default function UsersPage() {
                     <TableCell>{getEmailVerifiedBadge(user.emailVerified)}</TableCell>
                     <TableCell>{getStatusBadge(user.status)}</TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm">Edit</Button>
-                        <Button variant="outline" size="sm">
-                          <Mail className="h-4 w-4" />
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          onClick={() => handleDeleteUser(user.id, user.name)}
-                          disabled={isDeleting === user.id}
-                        >
-                          {isDeleting === user.id ? (
-                            <RefreshCw className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
+                      {/* Actions hidden per request */}
                     </TableCell>
                   </TableRow>
                 ))}

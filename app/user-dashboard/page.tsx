@@ -480,41 +480,7 @@ export default function UserDashboard() {
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Quick Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => router.push('/search')}
-                >
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Search Books
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => router.push('/shelf')}
-                >
-                  <Lightbulb className="h-4 w-4 mr-2" />
-                  Shelf Monitor
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start text-red-600 hover:text-red-700"
-                  onClick={handleLogout}
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  Logout
-                </Button>
-              </CardContent>
-            </Card>
+            {/* Quick Actions removed per request */}
           </div>
         </div>
       </div>
