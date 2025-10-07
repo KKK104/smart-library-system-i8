@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getAppUrl } from '@/lib/utils'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 // Use service role key for admin operations
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
       type: 'signup',
       email: email,
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback`
+        redirectTo: `${getAppUrl()}/auth/callback`
       }
     })
 

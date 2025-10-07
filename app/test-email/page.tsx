@@ -70,7 +70,7 @@ export default function TestEmailPage() {
       {
         to: email,
         subject: "👋 Welcome to Smart Library System",
-        message: `Welcome to our Smart Library System!\n\nYour account has been created successfully.\n\nYou can now:\n- Search and borrow books\n- Request books online\n- Track your borrowing history\n- Receive email notifications\n\nLogin at: http://localhost:3000\n\nThank you for joining us!`,
+        message: `Welcome to our Smart Library System!\n\nYour account has been created successfully.\n\nYou can now:\n- Search and borrow books\n- Request books online\n- Track your borrowing history\n- Receive email notifications\n\nLogin at: ${process.env.NEXT_PUBLIC_APP_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')}\n\nThank you for joining us!`,
         type: 'welcome'
       }
     ]

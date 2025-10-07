@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getAppUrl } from '@/lib/utils'
 import { v4 as uuidv4 } from 'uuid'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
@@ -92,9 +93,9 @@ export async function POST(request: NextRequest) {
 
     // Send verification email
     try {
-      const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify-email?token=${verificationToken}&email=${encodeURIComponent(email)}`
+      const verificationUrl = `${getAppUrl()}/verify-email?token=${verificationToken}&email=${encodeURIComponent(email)}`
       
-      const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/email/send`, {
+      const emailResponse = await fetch(`${getAppUrl()}/api/email/send`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

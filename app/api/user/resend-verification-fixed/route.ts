@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getAppUrl } from '@/lib/utils'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 // Use service role key for admin operations (resending emails)
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
         type: 'signup',
         email: email,
         options: {
-          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/auth/callback`
+          redirectTo: `${getAppUrl()}/auth/callback`
         }
       })
 
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Send the verification email using our email service
-      const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/email/send`, {
+      const emailResponse = await fetch(`${getAppUrl()}/api/email/send`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
