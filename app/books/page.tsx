@@ -99,7 +99,9 @@ export default function BooksPage() {
         body: JSON.stringify({
           bookId: selectedBook.id,
           borrowingDays: borrowingDays,
-          userId: userId
+          userId: userId,
+          email: userData.email,
+          name: userData.name || userData.full_name
         })
       })
 
