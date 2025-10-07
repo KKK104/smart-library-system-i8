@@ -16,6 +16,14 @@ export default function DashboardPage() {
   const [adminUser, setAdminUser] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  // Dashboard stats (must be declared before any early returns to keep hook order stable)
+  const [stats, setStats] = useState([
+    { title: "Total Books", value: "-", icon: BookOpen, color: "text-blue-600" },
+    { title: "Active Users", value: "-", icon: Users, color: "text-green-600" },
+    { title: "Books Borrowed", value: "-", icon: BarChart3, color: "text-orange-600" },
+    { title: "Overdue Items", value: "-", icon: Mail, color: "text-red-600" },
+  ])
+
   useEffect(() => {
     // Check if admin is logged in
     const token = localStorage.getItem('adminToken')
@@ -30,6 +38,27 @@ export default function DashboardPage() {
     setIsLoading(false)
   }, [router])
 
+  // Load stats once (still before any early returns)
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const res = await fetch('/api/admin/stats', { cache: 'no-store' })
+        if (res.ok) {
+          const data = await res.json()
+          setStats([
+            { title: 'Total Books', value: String(data.books), icon: BookOpen, color: 'text-blue-600' },
+            { title: 'Active Users', value: String(data.activeUsers), icon: Users, color: 'text-green-600' },
+            { title: 'Books Borrowed', value: String(data.borrowed), icon: BarChart3, color: 'text-orange-600' },
+            { title: 'Overdue Items', value: String(data.overdue), icon: Mail, color: 'text-red-600' },
+          ])
+        }
+      } catch (e) {
+        console.error('Failed to load stats', e)
+      }
+    }
+    loadStats()
+  }, [])
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
@@ -40,13 +69,6 @@ export default function DashboardPage() {
       </div>
     )
   }
-  
-  const stats = [
-    { title: "Total Books", value: "18", icon: BookOpen, color: "text-blue-600" },
-    { title: "Active Users", value: "1,234", icon: Users, color: "text-green-600" },
-    { title: "Books Borrowed", value: "456", icon: BarChart3, color: "text-orange-600" },
-    { title: "Overdue Items", value: "23", icon: Mail, color: "text-red-600" },
-  ]
 
   const recentActivity = [
     { action: "Book borrowed", book: "Algebra Fundamentals", user: "John Doe", time: "2 minutes ago" },
