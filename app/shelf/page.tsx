@@ -6,7 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Lightbulb, Zap, Wifi, AlertTriangle, CheckCircle, Activity, Calculator, Atom, Globe, Heart, Shield, Wrench } from 'lucide-react'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Lightbulb, Zap, Wifi, AlertTriangle, CheckCircle, Activity, Calculator, Atom, Globe, Heart, Shield, Wrench, Plus, X, Edit, Trash2, BookPlus } from 'lucide-react'
 import { AdminSidebar } from "@/components/admin-sidebar"
 
 export default function ShelfPage() {
@@ -85,6 +88,40 @@ export default function ShelfPage() {
   ])
 
   const [selectedSubject, setSelectedSubject] = useState<string | null>(null)
+  const [isAddBooksOpen, setIsAddBooksOpen] = useState(false)
+  const [isEditShelfOpen, setIsEditShelfOpen] = useState(false)
+  const [shelves, setShelves] = useState<Array<{ id: number, name: string, books: Array<{id: string, title: string, author: string, subject: string}> }>>([
+    { id: 1, name: "Shelf 1", books: [] }
+  ])
+  const [selectedShelfId, setSelectedShelfId] = useState<number>(1)
+
+  // Book entry/edit state
+  const [currentBookTitle, setCurrentBookTitle] = useState("")
+  const [currentBookAuthor, setCurrentBookAuthor] = useState("")
+  const [currentBookSubject, setCurrentBookSubject] = useState("")
+  const [editingBookId, setEditingBookId] = useState<string | null>(null)
+
+  // Available books catalog (sample data)
+  const availableBooks = [
+    { id: "b1", title: "Algebra Fundamentals", author: "John Smith", subject: "Mathematics" },
+    { id: "b2", title: "Calculus Made Easy", author: "Mary Johnson", subject: "Mathematics" },
+    { id: "b3", title: "Geometry Basics", author: "David Wilson", subject: "Mathematics" },
+    { id: "b4", title: "Physics Principles", author: "Sarah Brown", subject: "Science" },
+    { id: "b5", title: "Chemistry Basics", author: "Michael Davis", subject: "Science" },
+    { id: "b6", title: "Biology Essentials", author: "Lisa Garcia", subject: "Science" },
+    { id: "b7", title: "World History", author: "Robert Martinez", subject: "Social Studies" },
+    { id: "b8", title: "Philippine History", author: "Ana Rodriguez", subject: "Social Studies" },
+    { id: "b9", title: "Geography Today", author: "Carlos Lopez", subject: "Social Studies" },
+    { id: "b10", title: "Physical Education Guide", author: "Maria Santos", subject: "PEHM" },
+    { id: "b11", title: "Health and Wellness", author: "Jose Cruz", subject: "PEHM" },
+    { id: "b12", title: "Music Appreciation", author: "Carmen Reyes", subject: "PEHM" },
+    { id: "b13", title: "Moral Values", author: "Pedro Torres", subject: "Values Education" },
+    { id: "b14", title: "Character Building", author: "Rosa Mendoza", subject: "Values Education" },
+    { id: "b15", title: "Ethics and Society", author: "Manuel Flores", subject: "Values Education" },
+    { id: "b16", title: "Computer Programming", author: "Luz Gonzales", subject: "TLE" },
+    { id: "b17", title: "Cooking Basics", author: "Antonio Rivera", subject: "TLE" },
+    { id: "b18", title: "Electrical Wiring", author: "Elena Morales", subject: "TLE" }
+  ]
 
   const getLEDStatusColor = (status: string, defaultColor: string) => {
     switch (status) {
@@ -163,39 +200,192 @@ export default function ShelfPage() {
     }
   }
 
+  const addBookToShelf = () => {
+    if (!currentBookTitle.trim() || !currentBookAuthor.trim() || !currentBookSubject.trim()) return
+    const newBook = {
+      id: `book-${Date.now()}`,
+      title: currentBookTitle.trim(),
+      author: currentBookAuthor.trim(),
+      subject: currentBookSubject.trim()
+    }
+    setShelves(prev => prev.map(s => s.id === selectedShelfId ? { ...s, books: [...s.books, newBook] } : s))
+    setCurrentBookTitle("")
+    setCurrentBookAuthor("")
+    setCurrentBookSubject("")
+  }
+
+  const addExistingBookToShelf = (book: { id: string, title: string, author: string, subject: string }) => {
+    const toAdd = { ...book, id: `book-${Date.now()}` }
+    setShelves(prev => prev.map(s => s.id === selectedShelfId ? { ...s, books: [...s.books, toAdd] } : s))
+  }
+
+  const removeBookFromShelf = (bookId: string) => {
+    setShelves(prev => prev.map(s => s.id === selectedShelfId ? { ...s, books: s.books.filter(b => b.id !== bookId) } : s))
+  }
+
+  const startEditBook = (bookId: string, title: string, author: string, subject: string) => {
+    setEditingBookId(bookId)
+    setCurrentBookTitle(title)
+    setCurrentBookAuthor(author)
+    setCurrentBookSubject(subject)
+  }
+
+  const saveEditBook = () => {
+    if (!editingBookId) return
+    setShelves(prev => prev.map(s => s.id === selectedShelfId ? {
+      ...s,
+      books: s.books.map(b => b.id === editingBookId ? { ...b, title: currentBookTitle.trim(), author: currentBookAuthor.trim(), subject: currentBookSubject.trim() } : b)
+    } : s))
+    setEditingBookId(null)
+    setCurrentBookTitle("")
+    setCurrentBookAuthor("")
+    setCurrentBookSubject("")
+  }
+
+  const createNewShelf = () => {
+    const newShelfNumber = shelves.length + 1
+    const newShelf = { id: newShelfNumber, name: `Shelf ${newShelfNumber}`, books: [] as Array<{id: string, title: string, author: string, subject: string}> }
+    setShelves(prev => [...prev, newShelf])
+    setSelectedShelfId(newShelf.id)
+  }
+
+  const deleteCurrentShelf = () => {
+    if (shelves.length <= 1) return
+    const filtered = shelves.filter(s => s.id !== selectedShelfId)
+    // Re-index names to keep Shelf 1..N
+    const reindexed = filtered.map((s, idx) => ({ ...s, id: idx + 1, name: `Shelf ${idx + 1}` }))
+    setShelves(reindexed)
+    setSelectedShelfId(1)
+    setIsEditShelfOpen(false)
+  }
+
   const renderSubjectGrid = () => {
+    // For Shelf 1, show the original static subjects with their default book counts
+    if (selectedShelfId === 1) {
+      return (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+          {subjectData.map((subject) => {
+            const Icon = subject.icon
+            return (
+              <Card 
+                key={subject.id}
+                className={`cursor-pointer transition-all duration-300 ${
+                  selectedSubject === subject.id ? 'ring-2 ring-blue-500' : ''
+                } ${subject.esp32Status === 'offline' ? 'opacity-60' : ''}`}
+                onClick={() => setSelectedSubject(subject.id)}
+              >
+                <CardContent className="p-6 text-center">
+                  <div className="flex items-center justify-center mb-4">
+                    <Icon className="h-8 w-8 mr-2 text-gray-600" />
+                    <div className="text-lg font-bold">{subject.id}</div>
+                  </div>
+                  
+                  {/* LED Indicator */}
+                  <div className={`w-12 h-12 rounded-full mx-auto mb-4 ${getLEDStatusColor(subject.ledStatus, subject.color)}`}>
+                    {subject.ledStatus === 'on' && <Lightbulb className="h-6 w-6 text-yellow-800 mx-auto mt-3" />}
+                  </div>
+                  
+                  {/* Status Badges */}
+                  <div className="space-y-2 mb-4">
+                    <div className="text-sm text-gray-600">
+                      {subject.books} books
+                    </div>
+                  </div>
+                  
+                  {/* Test Button */}
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      testSubjectLED(subject.id)
+                    }}
+                    disabled={subject.esp32Status === 'offline'}
+                    className="w-full"
+                  >
+                    <Zap className="h-3 w-3 mr-1" />
+                    Test LED
+                  </Button>
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+      )
+    }
+
+    // For other shelves (Shelf 2+), show dynamic subjects based on books
+    const currentShelf = shelves.find(s => s.id === selectedShelfId)
+    if (!currentShelf) return null
+
+    // Group books by subject for display
+    const booksBySubject = currentShelf.books.reduce((acc, book) => {
+      if (!acc[book.subject]) acc[book.subject] = []
+      acc[book.subject].push(book)
+      return acc
+    }, {} as Record<string, Array<{id: string, title: string, author: string, subject: string}>>)
+
+    // Map subjects to their display info
+    const subjectDisplayMap: Record<string, { icon: any, color: string, ledPin?: number }> = {
+      'Mathematics': { icon: Calculator, color: 'bg-blue-500', ledPin: 1 },
+      'Science': { icon: Atom, color: 'bg-green-500', ledPin: 2 },
+      'Social Studies': { icon: Globe, color: 'bg-yellow-500', ledPin: 3 },
+      'PEHM': { icon: Heart, color: 'bg-red-500', ledPin: 4 },
+      'Values Education': { icon: Shield, color: 'bg-purple-500', ledPin: 5 },
+      'TLE': { icon: Wrench, color: 'bg-orange-500', ledPin: 6 }
+    }
+
+    // Only show subjects that have books
+    const allSubjects = ['Mathematics', 'Science', 'Social Studies', 'PEHM', 'Values Education', 'TLE']
+    const subjectsWithBooks = allSubjects.filter(subjectName => {
+      const booksInSubject = booksBySubject[subjectName] || []
+      return booksInSubject.length > 0
+    })
+
+    // If no subjects have books, show empty message
+    if (subjectsWithBooks.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <div className="text-gray-500 text-lg mb-4">No books in this shelf yet</div>
+          <div className="text-gray-400 text-sm">Add books to see subjects and LED controls</div>
+        </div>
+      )
+    }
+
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-        {subjectData.map((subject) => {
-          const Icon = subject.icon
+        {subjectsWithBooks.map((subjectName) => {
+          const subjectInfo = subjectDisplayMap[subjectName]
+          const Icon = subjectInfo.icon
+          const booksInSubject = booksBySubject[subjectName] || []
+          const hasBooks = booksInSubject.length > 0
+          const isLit = selectedSubject === subjectName
+
           return (
             <Card 
-              key={subject.id}
+              key={subjectName}
               className={`cursor-pointer transition-all duration-300 ${
-                selectedSubject === subject.id ? 'ring-2 ring-blue-500' : ''
-              } ${subject.esp32Status === 'offline' ? 'opacity-60' : ''}`}
-              onClick={() => setSelectedSubject(subject.id)}
+                isLit ? 'ring-2 ring-blue-500' : ''
+              }`}
+              onClick={() => hasBooks ? setSelectedSubject(subjectName) : null}
             >
               <CardContent className="p-6 text-center">
                 <div className="flex items-center justify-center mb-4">
                   <Icon className="h-8 w-8 mr-2 text-gray-600" />
-                  <div className="text-lg font-bold">{subject.id}</div>
+                  <div className="text-lg font-bold">{subjectName}</div>
                 </div>
                 
                 {/* LED Indicator */}
-                <div className={`w-12 h-12 rounded-full mx-auto mb-4 ${getLEDStatusColor(subject.ledStatus, subject.color)}`}>
-                  {subject.ledStatus === 'on' && <Lightbulb className="h-6 w-6 text-yellow-800 mx-auto mt-3" />}
+                <div className={`w-12 h-12 rounded-full mx-auto mb-4 ${getLEDStatusColor(isLit ? 'on' : 'off', subjectInfo.color)}`}>
+                  {isLit && <Lightbulb className="h-6 w-6 text-yellow-800 mx-auto mt-3" />}
                 </div>
                 
                 {/* Status Badges */}
                 <div className="space-y-2 mb-4">
-                  {/* Online badge, LED pin removed per request */}
                   <div className="text-sm text-gray-600">
-                    {subject.books} books
+                    {booksInSubject.length} book{booksInSubject.length !== 1 ? 's' : ''}
                   </div>
                 </div>
-                
-                {/* Power level removed per request */}
                 
                 {/* Test Button */}
                 <Button 
@@ -203,9 +393,9 @@ export default function ShelfPage() {
                   variant="outline" 
                   onClick={(e) => {
                     e.stopPropagation()
-                    testSubjectLED(subject.id)
+                    if (hasBooks) testSubjectLED(subjectName)
                   }}
-                  disabled={subject.esp32Status === 'offline'}
+                  disabled={!hasBooks}
                   className="w-full"
                 >
                   <Zap className="h-3 w-3 mr-1" />
@@ -219,9 +409,6 @@ export default function ShelfPage() {
     )
   }
 
-  const onlineSubjectCount = subjectData.filter(subject => subject.esp32Status === 'online').length
-  const averagePowerLevel = Math.round(subjectData.reduce((sum, subject) => sum + subject.powerLevel, 0) / subjectData.length)
-  const totalBooks = subjectData.reduce((sum, subject) => sum + subject.books, 0)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -237,68 +424,192 @@ export default function ShelfPage() {
           <p className="text-lg text-gray-600">Real-time monitoring of 6 subject area LEDs and ESP32 controllers</p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Online Subjects</p>
-                  <p className="text-2xl font-bold text-gray-900">{onlineSubjectCount}/6</p>
-                </div>
-                <CheckCircle className="h-8 w-8 text-green-600" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Average Power</p>
-                  <p className="text-2xl font-bold text-gray-900">{averagePowerLevel}%</p>
-                </div>
-                <Zap className="h-8 w-8 text-yellow-600" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total Books</p>
-                  <p className="text-2xl font-bold text-gray-900">{totalBooks}</p>
-                </div>
-                <Activity className="h-8 w-8 text-blue-600" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Active LEDs</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {subjectData.filter(subject => subject.ledStatus !== 'off').length}
-                  </p>
-                </div>
-                <Lightbulb className="h-8 w-8 text-orange-600" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
         {/* Subject Grid */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>6 Subject Areas - LED Status</CardTitle>
-            <CardDescription>
-              Click on any subject to view detailed information. Each subject has its own LED controlled by the ESP32.
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div className="flex flex-col">
+                <div className="flex items-center gap-3">
+                  <CardTitle>{shelves.find(s => s.id === selectedShelfId)?.name || "Shelf 1"}</CardTitle>
+                  <select
+                    value={selectedShelfId}
+                    onChange={(e) => setSelectedShelfId(parseInt(e.target.value))}
+                    className="border rounded px-2 py-1 text-sm bg-white"
+                  >
+                    {shelves.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <CardDescription>
+                  Click on any subject to view detailed information. Each subject has its own LED controlled by the ESP32.
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button onClick={createNewShelf}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Shelf
+                </Button>
+                <Dialog open={isAddBooksOpen} onOpenChange={setIsAddBooksOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">
+                      <BookPlus className="h-4 w-4 mr-2" />
+                      Add Books
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[900px]">
+                    <DialogHeader>
+                      <DialogTitle>Add Books to {shelves.find(s => s.id === selectedShelfId)?.name}</DialogTitle>
+                      <DialogDescription>
+                        Pick from available books or add a custom one. You can also edit or delete books already in this shelf.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Available Books */}
+                      <div className="border rounded-lg p-4">
+                        <h4 className="font-medium mb-3">Available Books</h4>
+                        <div className="space-y-2 max-h-72 overflow-auto">
+                          {availableBooks.map(b => (
+                            <div key={b.id} className="flex items-center justify-between p-2 border rounded">
+                              <div>
+                                <p className="font-medium text-sm">{b.title}</p>
+                                <p className="text-xs text-gray-600">by {b.author} • {b.subject}</p>
+                              </div>
+                              <Button size="sm" onClick={() => addExistingBookToShelf(b)}>Add</Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Shelf Books CRUD */}
+                      <div className="border rounded-lg p-4">
+                        <h4 className="font-medium mb-3">Books in {shelves.find(s => s.id === selectedShelfId)?.name}</h4>
+                        <div className="space-y-3">
+                          {/* Entry / Edit Form */}
+                          <div className="grid grid-cols-3 gap-3">
+                            <div className="space-y-1">
+                              <Label htmlFor="book-title">Title</Label>
+                              <Input id="book-title" value={currentBookTitle} onChange={(e) => setCurrentBookTitle(e.target.value)} placeholder="Enter book title" />
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor="book-author">Author</Label>
+                              <Input id="book-author" value={currentBookAuthor} onChange={(e) => setCurrentBookAuthor(e.target.value)} placeholder="Enter author" />
+                            </div>
+                            <div className="space-y-1">
+                              <Label htmlFor="book-subject">Subject</Label>
+                              <Input id="book-subject" value={currentBookSubject} onChange={(e) => setCurrentBookSubject(e.target.value)} placeholder="Enter subject" />
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            {editingBookId ? (
+                              <>
+                                <Button onClick={saveEditBook}>Save</Button>
+                                <Button variant="outline" onClick={() => { setEditingBookId(null); setCurrentBookTitle(""); setCurrentBookAuthor(""); setCurrentBookSubject("") }}>Cancel</Button>
+                              </>
+                            ) : (
+                              <Button onClick={addBookToShelf} disabled={!currentBookTitle || !currentBookAuthor || !currentBookSubject}>Add Book</Button>
+                            )}
+                          </div>
+
+                          {/* Existing Books List */}
+                          <div className="space-y-2 max-h-64 overflow-auto">
+                            {shelves.find(s => s.id === selectedShelfId)?.books.map(b => (
+                              <div key={b.id} className="flex items-center justify-between p-2 border rounded">
+                                <div>
+                                  <p className="font-medium text-sm">{b.title}</p>
+                                  <p className="text-xs text-gray-600">by {b.author} • {b.subject}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Button size="sm" variant="outline" onClick={() => startEditBook(b.id, b.title, b.author, b.subject)}>
+                                    <Edit className="h-3 w-3 mr-1" /> Edit
+                                  </Button>
+                                  <Button size="sm" variant="destructive" onClick={() => removeBookFromShelf(b.id)}>
+                                    <Trash2 className="h-3 w-3 mr-1" /> Delete
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsAddBooksOpen(false)}>Close</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+                <Dialog open={isEditShelfOpen} onOpenChange={setIsEditShelfOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost">
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit Shelf
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Edit {shelves.find(s => s.id === selectedShelfId)?.name}</DialogTitle>
+                      <DialogDescription>Delete the shelf or switch using the dropdown above.</DialogDescription>
+                    </DialogHeader>
+                    <div className="flex items-center justify-between p-3 border rounded">
+                      <div>
+                        <p className="font-medium">Danger Zone</p>
+                        <p className="text-sm text-gray-600">Deleting a shelf removes all of its book assignments.</p>
+                      </div>
+                      <Button variant="destructive" onClick={deleteCurrentShelf} disabled={shelves.length <= 1}>
+                        <Trash2 className="h-4 w-4 mr-2" /> Delete Shelf
+                      </Button>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setIsEditShelfOpen(false)}>Close</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {renderSubjectGrid()}
           </CardContent>
         </Card>
+
+        {/* All Shelves Display */}
+        {shelves.length > 1 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>All Shelves</CardTitle>
+              <CardDescription>
+                Manage and view all library shelves
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {shelves.map((shelf) => (
+                  <div key={shelf.id} className="p-4 border rounded-lg">
+                    <h3 className="font-semibold text-lg mb-2">{shelf.name}</h3>
+                    <p className="text-sm text-gray-600 mb-3">
+                      {shelf.books.length} book(s)
+                    </p>
+                    {shelf.books.length > 0 && (
+                      <div className="space-y-2">
+                        {shelf.books.slice(0, 3).map((book) => (
+                          <div key={book.id} className="text-sm">
+                            <p className="font-medium">{book.title}</p>
+                            <p className="text-gray-600">by {book.author}</p>
+                          </div>
+                        ))}
+                        {shelf.books.length > 3 && (
+                          <p className="text-xs text-gray-500">
+                            +{shelf.books.length - 3} more books
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Detailed Information */}
         {selectedSubject && (
@@ -309,9 +620,8 @@ export default function ShelfPage() {
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="overview">Overview</TabsTrigger>
-                  <TabsTrigger value="components">Components</TabsTrigger>
                   <TabsTrigger value="diagnostics">Diagnostics</TabsTrigger>
                 </TabsList>
                 
@@ -404,101 +714,6 @@ export default function ShelfPage() {
                   })()}
                 </TabsContent>
                 
-                <TabsContent value="components" className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="p-4 border rounded-lg">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-8 h-8 bg-yellow-500 rounded"></div>
-                        <h4 className="font-medium">LED Light Module</h4>
-                      </div>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span>Type:</span>
-                          <span>High-brightness LED</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>GPIO Pin:</span>
-                          <span>{subjectData.find(s => s.id === selectedSubject)?.ledPin}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Power:</span>
-                          <span>5W</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Status:</span>
-                          <Badge variant="outline">{subjectData.find(s => s.id === selectedSubject)?.ledStatus}</Badge>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="p-4 border rounded-lg">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-8 h-8 bg-blue-500 rounded"></div>
-                        <h4 className="font-medium">ESP32 Controller</h4>
-                      </div>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span>Model:</span>
-                          <span>ESP32-WROOM-32</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>WiFi:</span>
-                          <span>Connected</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Firmware:</span>
-                          <span>v2.1.0</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Status:</span>
-                          {getESP32StatusBadge(subjectData.find(s => s.id === selectedSubject)?.esp32Status || 'offline')}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="p-4 border rounded-lg">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-8 h-8 bg-green-500 rounded"></div>
-                        <h4 className="font-medium">Breadboard</h4>
-                      </div>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span>Type:</span>
-                          <span>Half-size breadboard</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Connections:</span>
-                          <span>400 tie points</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Status:</span>
-                          <Badge className="bg-green-100 text-green-800">Connected</Badge>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="p-4 border rounded-lg">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-8 h-8 bg-red-500 rounded"></div>
-                        <h4 className="font-medium">Power Supply</h4>
-                      </div>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span>Voltage:</span>
-                          <span>5V DC</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Current:</span>
-                          <span>2A max</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Battery:</span>
-                          <span>{subjectData.find(s => s.id === selectedSubject)?.powerLevel}%</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </TabsContent>
                 
                 <TabsContent value="diagnostics" className="space-y-4">
                   <div className="p-4 bg-blue-50 rounded-lg">

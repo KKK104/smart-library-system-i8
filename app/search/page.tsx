@@ -210,7 +210,7 @@ export default function SearchPage() {
           {/* Subject LED Visualization */}
           <Card>
             <CardHeader>
-              <CardTitle>Subject Areas & LED Status</CardTitle>
+              <CardTitle>Shelf 1</CardTitle>
               <CardDescription>
                 {selectedSubject
                   ? `${selectedSubject} LED is currently lit up`
