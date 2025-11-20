@@ -355,11 +355,10 @@ export default function NotificationsPage() {
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="email" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="email">Email Notifications ({stats.totalEmailNotifications})</TabsTrigger>
                 <TabsTrigger value="user">User Notifications ({stats.totalUserNotifications})</TabsTrigger>
                 <TabsTrigger value="due">Due Date Analysis ({stats.dueSoonItems + stats.overdueItems})</TabsTrigger>
-                <TabsTrigger value="pending">Pending ({pendingEmailNotifications.length})</TabsTrigger>
               </TabsList>
               
               <TabsContent value="email">
@@ -468,42 +467,6 @@ export default function NotificationsPage() {
                           {new Date(record.borrowedDate).toLocaleDateString()}
                         </TableCell>
                         <TableCell>{getTypeBadge(record.status)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TabsContent>
-              
-              <TabsContent value="pending">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Book</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Due Date</TableHead>
-                      <TableHead>Days Until Due</TableHead>
-                      <TableHead>Scheduled</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {pendingEmailNotifications.map((notification) => (
-                      <TableRow key={notification.id}>
-                        <TableCell>
-                          <div>
-                            <div className="font-medium">{notification.user}</div>
-                            <div className="text-sm text-gray-500">{notification.email}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-medium">{notification.book}</TableCell>
-                        <TableCell>{getTypeBadge(notification.type)}</TableCell>
-                        <TableCell>{notification.dueDate}</TableCell>
-                        <TableCell>
-                          <Badge variant={notification.daysUntilDue <= 1 ? "secondary" : "outline"}>
-                            {notification.daysUntilDue} days
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-gray-500">{notification.scheduledTime}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
